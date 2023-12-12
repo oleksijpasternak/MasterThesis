@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocular disease detection</title>
+    <!-- Add Bootstrap CSS link -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body class="container mt-5">
+    <div class="row">
+        <div class="col-md-4 mx-auto">
+            <h1 class="text-center mb-4">Ocular disease detection</h1>
+            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="form-group row">
+                    <div class="col-sm-9 d-flex align-items-center">
+                        <!-- <label for="file" class="col-form-label mr-2">Choose a Photo:</label> -->
+                        <input type="file" class="form-control-file" name="file" id="file" accept="image/*" required onchange="previewPhoto(this)">
+                    </div>
+                    <div class="col-sm-3 text-right d-flex align-items-center">
+                        <button type="button" class="btn btn-primary" onclick="uploadPhoto()">Upload</button>
+                    </div>
+                </div>
+            </form>
+            <div id="photoPreview" class="mt-4"></div>
+            <div id="result" class="mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Add Bootstrap JS and Popper.js scripts (if not already included) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+        function uploadPhoto() {
+            // Get the form data
+            const formData = new FormData(document.getElementById('uploadForm'));
+
+            // Make an AJAX request using the Fetch API
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                // Parse the string into an array of disease and percentage pairs
+                const resultsArray = data.split(' ').map(pair => pair.split(':'));
+                
+                // Display the results in a formatted way
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '';
+
+                resultsArray.forEach(pair => {
+                    const disease = pair[0];
+                    const percentage = parseFloat(pair[1]) * 100; // Convert to percentage
+                    const formattedPercentage = percentage.toFixed(2); // Format to two decimal places
+
+                    // Create a new row for each disease
+                    const row = document.createElement('div');
+                    row.className = 'row';
+                    row.innerHTML = `
+                        <div class="col-9">${disease}</div>
+                        <div class="col-3 text-left">${formattedPercentage}%</div>
+                    `;
+                    resultDiv.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function previewPhoto(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = document.getElementById('photoPreview');
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" class="img-fluid">
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+</html>
